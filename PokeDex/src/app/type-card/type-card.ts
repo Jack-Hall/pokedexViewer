@@ -14,9 +14,9 @@ export type PokemonType =
   styleUrl: './type-card.css'
 })
 export class TypeCard {
-  @Input() type!: PokemonType;
+  @Input() type!: string;
 
-  private readonly typeColorMap: Record<PokemonType, string> = {
+  private readonly typeColorMap: Record<string, string> = {
     'normal': '#A8A878',
     'fire': '#F08030',
     'water': '#6890F0',
@@ -42,6 +42,6 @@ export class TypeCard {
   }
 
   getTypeName(): string {
-    return this.type.charAt(0).toUpperCase() + this.type.slice(1);
+    return this.type;
   }
 }

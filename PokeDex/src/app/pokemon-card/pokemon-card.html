@@ -1,1 +1,5 @@
-<p>name: {{pokemon()?.name}}</p>
+<p>name: {{pokemon()?.name}}
+    @for(type of pokemon()?.types; track type.type.name){
+        <app-type-card [type]="type.type.name"></app-type-card>
+    }
+</p>
