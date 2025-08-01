@@ -1,0 +1,62 @@
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+  border: 1px solid #ffcdd2;
+}
+
+.data-container {
+  margin: 20px 0;
+}
+
+.data-container h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.data-item {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.data-item strong {
+  color: #333;
+  font-size: 16px;
+}
+
+.data-item span {
+  color: #666;
+  font-size: 14px;
+}
