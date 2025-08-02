@@ -1,13 +1,17 @@
-<div class="pokemon-card">
+<div class="pokemon-card" [style]="getBackgroundStyle()">
     <div class="pokemon-card-header">
-        <h2>{{pokemon()?.name}}</h2>
+        <div class="pokemon-info">
+            <h2 class="pokemon-name">{{pokemon()?.name | titlecase}}</h2>
+            <div class="pokemon-types">
+                @for(type of pokemon()?.types; track type.type.name){
+                    <app-type-card [type]="type.type.name"></app-type-card>
+                }
+            </div>
+        </div>
+        <div class="pokemon-image">
+            <img [src]="getSpriteUrl()" [alt]="pokemon()?.name">
+        </div>
     </div>
-    <div class="pokemon-card-body">
-        <img src="{{pokemon()?.sprites?.front_default}}" alt="pokemon image">
-    </div>
-    @for(type of pokemon()?.types; track type.type.name){
-        <app-type-card [type]="type.type.name"></app-type-card>
-    }
 </div>
 
 
