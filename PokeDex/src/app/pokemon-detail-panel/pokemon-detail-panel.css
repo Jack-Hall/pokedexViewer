@@ -126,4 +126,27 @@
 .no-selection p {
   font-size: 1rem;
   opacity: 0.8;
+}
+
+.pokemon-description {
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.pokemon-description h3 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.flavor-text {
+  color: #555;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+  margin: 0;
 } 

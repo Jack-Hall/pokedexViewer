@@ -19,6 +19,7 @@ export interface Pokemon {
   stats: Stat[];
   types: Type[];
   weight: number;
+  species_details: PokemonSpecies
 }
 
 export interface Ability {
@@ -363,4 +364,77 @@ export interface Type {
 export interface TypeDetail {
   name: string;
   url: string;
+}
+
+// Species endpoint types
+export interface PokemonSpecies {
+  base_happiness: number;
+  capture_rate: number;
+  color: NamedResource;
+  egg_groups: NamedResource[];
+  evolution_chain: NamedResource;
+  evolves_from_species: NamedResource | null;
+  flavor_text_entries: FlavorTextEntry[];
+  form_descriptions: FormDescription[];
+  forms_switchable: boolean;
+  gender_rate: number;
+  genera: Genus[];
+  generation: NamedResource;
+  growth_rate: NamedResource;
+  habitat: NamedResource | null;
+  has_gender_differences: boolean;
+  hatch_counter: number;
+  id: number;
+  is_baby: boolean;
+  is_legendary: boolean;
+  is_mythical: boolean;
+  name: string;
+  names: Name[];
+  order: number;
+  pal_park_encounters: PalParkEncounter[];
+  pokedex_numbers: PokedexNumber[];
+  shape: NamedResource;
+  varieties: Variety[];
+}
+
+export interface NamedResource {
+  name: string;
+  url: string;
+}
+
+export interface FlavorTextEntry {
+  flavor_text: string;
+  language: NamedResource;
+  version: NamedResource;
+}
+
+export interface FormDescription {
+  description: string;
+  language: NamedResource;
+}
+
+export interface Genus {
+  genus: string;
+  language: NamedResource;
+}
+
+export interface Name {
+  language: NamedResource;
+  name: string;
+}
+
+export interface PalParkEncounter {
+  area: NamedResource;
+  base_score: number;
+  rate: number;
+}
+
+export interface PokedexNumber {
+  entry_number: number;
+  pokedex: NamedResource;
+}
+
+export interface Variety {
+  is_default: boolean;
+  pokemon: NamedResource;
 } 

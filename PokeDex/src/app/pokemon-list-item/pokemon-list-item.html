@@ -4,9 +4,61 @@
 
   <!-- Right side: Pokemon List -->
   <div class="list-panel">
-    <h2 class="list-title">Pokemon</h2>
+    <div class="list-header">
+      <h2 class="list-title">Pokemon</h2>
+      <div class="filters-container">
+        <div class="search-container">
+          <input 
+            type="text" 
+            class="search-input" 
+            placeholder="Search Pokemon..."
+            [value]="searchTerm()"
+            (input)="onSearchChange($event)"
+          >
+        </div>
+        <div class="type-filter-container">
+          <div class="type-dropdown">
+            <button 
+              class="type-dropdown-button"
+              (click)="toggleTypeDropdown()"
+              [class.selected]="selectedType()"
+            >
+              @if(selectedType()){
+                <div class="selected-type-container">
+                  <app-type-card [type]="selectedType()"></app-type-card>
+                  <button 
+                    class="clear-type-button"
+                    (click)="onTypeSelect(selectedType()); $event.stopPropagation()"
+                    title="Clear selection"
+                  >
+                    ×
+                  </button>
+                </div>
+              } @else {
+                <span class="dropdown-placeholder">Select Type</span>
+              }
+              <span class="dropdown-arrow" [class.open]="isTypeDropdownOpen()">▼</span>
+            </button>
+            
+            @if(isTypeDropdownOpen()){
+              <div class="type-dropdown-menu">
+                @for(type of availableTypes; track type){
+                  <div 
+                    class="type-dropdown-item"
+                    [class.selected]="selectedType() === type"
+                    (click)="onTypeSelect(type)"
+                  >
+                    <app-type-card [type]="type"></app-type-card>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="pokemon-list">
-      @for(pokemon of pokemons(); track pokemon.id){
+      @for(pokemon of filteredPokemons(); track pokemon.id){
         <div class="pokemon-list-item" 
              (mouseenter)="onPokemonHover(pokemon)"
              (mouseleave)="onPokemonLeave()">

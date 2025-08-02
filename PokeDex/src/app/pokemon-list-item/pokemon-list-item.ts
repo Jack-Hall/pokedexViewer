@@ -1,13 +1,15 @@
-import { Component, OnInit, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal, computed, inject, HostListener } from '@angular/core';
+import { TitleCasePipe } from '@angular/common';
 import { PokemonDataService } from '../data.service';
 import { PokemonCard } from '../pokemon-card/pokemon-card';
 import { PokemonDetailPanel } from '../pokemon-detail-panel/pokemon-detail-panel';
-import { Pokemon } from '../pokemon.types';
+import { TypeCard } from '../type-card/type-card';
+import { Pokemon, PokemonSpecies } from '../pokemon.types';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-pokemon-list-item',
-  imports: [PokemonCard, PokemonDetailPanel],
+  imports: [PokemonCard, PokemonDetailPanel, TypeCard, TitleCasePipe],
   templateUrl: './pokemon-list-item.html',
   styleUrl: './pokemon-list-item.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -16,6 +18,9 @@ import { forkJoin } from 'rxjs';
 export class PokemonList implements OnInit {
   private readonly _pokemons = signal<Pokemon[]>([]);
   private readonly _selectedPokemon = signal<Pokemon | null>(null);
+  private readonly _searchTerm = signal<string>('');
+  private readonly _selectedType = signal<string>('');
+  private readonly _isTypeDropdownOpen = signal<boolean>(false);
   private readonly pokemonShinyStatus = new Map<number, boolean>();
 
   private readonly typeGradients: Record<string, string> = {
@@ -44,6 +49,42 @@ export class PokemonList implements OnInit {
   // Computed signals for template access
   readonly pokemons = this._pokemons.asReadonly();
   readonly selectedPokemon = this._selectedPokemon.asReadonly();
+  readonly searchTerm = this._searchTerm.asReadonly();
+  readonly selectedType = this._selectedType.asReadonly();
+  readonly isTypeDropdownOpen = this._isTypeDropdownOpen.asReadonly();
+
+  // Available types for filter
+  readonly availableTypes = [
+    'normal', 'fire', 'water', 'grass', 'flying', 'fighting', 
+    'poison', 'electric', 'ground', 'rock', 'psychic', 'ice', 'bug', 
+    'ghost', 'dragon', 'dark', 'steel', 'fairy'
+  ];
+
+  // Computed signal for filtered pokemon
+  readonly filteredPokemons = computed(() => {
+    const search = this.searchTerm().toLowerCase();
+    const selectedType = this.selectedType();
+    const allPokemons = this.pokemons();
+    
+    let filtered = allPokemons;
+    
+    // Filter by type if selected
+    if (selectedType && selectedType !== 'all') {
+      filtered = filtered.filter(pokemon => 
+        pokemon.types.some(type => type.type.name === selectedType)
+      );
+    }
+    
+    // Filter by search term if provided
+    if (search) {
+      filtered = filtered.filter(pokemon => 
+        pokemon.name.toLowerCase().includes(search) ||
+        pokemon.id.toString().includes(search)
+      );
+    }
+    
+    return filtered;
+  });
 
   ngOnInit(): void {
     this.dataService.getPokemon()
@@ -60,9 +101,29 @@ export class PokemonList implements OnInit {
         const sortedPokemon = (pokemonData as Pokemon[]).sort((poke_a: Pokemon, poke_b: Pokemon) => {
           return poke_a.id - poke_b.id; // Sort by ID ascending
         });
-        this._pokemons.set(sortedPokemon);
-        console.log('Sorted Pokemon:', sortedPokemon);
+        
+        // Fetch species data for each Pokemon
+        this.fetchSpeciesData(sortedPokemon);
       });
+    });
+  }
+
+  private fetchSpeciesData(pokemons: Pokemon[]): void {
+    // Create an array of observables for species data calls
+    const speciesObservables = pokemons.map((pokemon) => 
+      this.dataService.getSpeciesData(pokemon.species.url)
+    );
+    
+    // Wait for all species calls to complete
+    forkJoin(speciesObservables).subscribe((speciesData: PokemonSpecies[]) => {
+      // Combine Pokemon data with species data
+      const pokemonsWithSpecies = pokemons.map((pokemon, index) => ({
+        ...pokemon,
+        species_details: speciesData[index]
+      }));
+      
+      this._pokemons.set(pokemonsWithSpecies);
+      console.log('Pokemon with species data:', pokemonsWithSpecies);
     });
   }
 
@@ -72,6 +133,37 @@ export class PokemonList implements OnInit {
 
   onPokemonLeave(): void {
     // this._selectedPokemon.set(null);
+  }
+
+  onSearchChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this._searchTerm.set(target.value);
+  }
+
+  toggleTypeDropdown(): void {
+    this._isTypeDropdownOpen.update(open => !open);
+  }
+
+  onTypeSelect(type: string): void {
+    if (this.selectedType() === type) {
+      // If clicking the same type, deselect it
+      this._selectedType.set('');
+    } else {
+      this._selectedType.set(type);
+    }
+    this._isTypeDropdownOpen.set(false);
+  }
+
+  closeTypeDropdown(): void {
+    this._isTypeDropdownOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.type-dropdown')) {
+      this._isTypeDropdownOpen.set(false);
+    }
   }
 
   getPokemonShinyStatus(pokemonId: number): boolean {

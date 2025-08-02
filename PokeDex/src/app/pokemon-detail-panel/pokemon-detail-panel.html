@@ -40,7 +40,20 @@
         <span class="label">Base Experience:</span>
         <span class="value">{{ pokemon.base_experience }}</span>
       </div>
+      @if (pokemon.species_details && pokemon.species_details.habitat && pokemon.species_details.habitat.name) {
+        <div class="info-item">
+          <span class="label">Habitat:</span>
+          <span class="value">{{ pokemon.species_details.habitat.name | titlecase }}</span>
+        </div>
+      }
     </div>
+
+    @if (getFirstFlavorText()) {
+      <div class="pokemon-description">
+        <h3>Description</h3>
+        <p class="flavor-text">{{ getFirstFlavorText() }}</p>
+      </div>
+    }
   </div>
 } @else {
   <div class="no-selection">

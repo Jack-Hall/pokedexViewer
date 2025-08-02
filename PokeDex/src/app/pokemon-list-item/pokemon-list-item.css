@@ -10,7 +10,7 @@
 }
 
 .detail-panel {
-  flex: 3;
+  flex: 2.5;
   padding: 2rem;
   overflow-y: auto;
   display: flex;
@@ -21,7 +21,7 @@
 }
 
 .list-panel {
-  flex: 2;
+  flex: 2.5;
   background: #770101;
   border-left: 2px solid #b30723;
   overflow-y: auto;
@@ -29,16 +29,196 @@
   min-width: 0;
 }
 
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
 .list-title {
   text-align: left;
   color: #ffffff;
-  margin-bottom: 1rem;
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   font-family: 'Press Start 2P', 'Courier New', monospace;
   letter-spacing: 1px;
+  flex-shrink: 0;
 }
+
+.filters-container {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-container {
+  flex: 2;
+  min-width: 0;
+}
+
+.type-filter-container {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.type-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.type-dropdown-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #ffffff;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.7rem;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  min-height: 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.type-dropdown-button:hover {
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  background: rgba(255, 255, 255, 1);
+}
+
+.type-dropdown-button.selected {
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.dropdown-placeholder {
+  color: #666;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.6rem;
+}
+
+.selected-type-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.clear-type-button {
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+}
+
+.clear-type-button:hover {
+  background: rgba(255, 0, 0, 1);
+  transform: scale(1.1);
+}
+
+/* Constrain type cards within the dropdown button */
+.type-dropdown-button app-type-card {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 120px;
+}
+
+.dropdown-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease-in-out;
+  color: #333;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.type-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid #ffffff;
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.type-dropdown-item {
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.type-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.type-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.type-dropdown-item.selected {
+  background: rgba(255, 215, 0, 0.2);
+  border-left: 3px solid #ffd700;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #ffffff;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.7rem;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.search-input::placeholder {
+  color: #666;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.6rem;
+}
+
+.search-input:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+  background: rgba(255, 255, 255, 1);
+}
+
+
 
 .pokemon-list {
   display: flex;
