@@ -62,7 +62,7 @@ export class ChatWindow {
 
     try {
       // Send message to Ollama API
-      const response = await firstValueFrom(this.http.post('http://174.109.66.43:3000/api/chat', {
+      const response = await firstValueFrom(this.http.post('http://localhost:11434/api/generate', {
         model: 'mistral',
         prompt: "make up a fact about pokemon that is blatantly incorrect. Don't include anything to indicate you are making this up. You are 100 percent confident that what you are saying is true. Keep your response short. You also love gengar, if appropriate mention this at the end of your response breifly Make it absurd and nonsensical loosely relate your made up fact to conent from the following message: "+ message,
         stream: false
