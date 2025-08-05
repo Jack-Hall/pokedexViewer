@@ -1,7 +1,4 @@
 <div class="pokemon-layout">
-  <!-- Left side: Pokemon Detail Card -->
- 
-
   <!-- Right side: Pokemon List -->
   <div class="list-panel">
     <div class="list-header">
@@ -22,13 +19,14 @@
               class="type-dropdown-button"
               (click)="toggleTypeDropdown()"
               [class.selected]="selectedType()"
+              [disabled]="isTypeFilterLoading()"
             >
               @if(selectedType()){
                 <div class="selected-type-container">
                   <app-type-card [type]="selectedType()"></app-type-card>
                   <button 
                     class="clear-type-button"
-                    (click)="onTypeSelect(selectedType()); $event.stopPropagation()"
+                    (click)="clearTypeFilter(); $event.stopPropagation()"
                     title="Clear selection"
                   >
                     ×
@@ -37,7 +35,11 @@
               } @else {
                 <span class="dropdown-placeholder">Select Type</span>
               }
-              <span class="dropdown-arrow" [class.open]="isTypeDropdownOpen()">▼</span>
+              @if(isTypeFilterLoading()){
+                <div class="type-filter-loading-spinner"></div>
+              } @else {
+                <span class="dropdown-arrow" [class.open]="isTypeDropdownOpen()">▼</span>
+              }
             </button>
             
             @if(isTypeDropdownOpen()){
@@ -57,16 +59,57 @@
         </div>
       </div>
     </div>
-    <div class="pokemon-list">
-      @for(pokemon of filteredPokemons(); track pokemon.id){
-        <div class="pokemon-list-item" 
-             (mouseenter)="onPokemonHover(pokemon)"
-             (mouseleave)="onPokemonLeave()">
-          <app-pokemon-card [pokemon]="pokemon"
-          [isShiny]="getPokemonShinyStatus(pokemon.id)"></app-pokemon-card>
-        </div>
-      }
-    </div>
+    
+    @if(isLoading()){
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading Pokemon list...</p>
+      </div>
+    } @else if(isTypeFilterLoading()){
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading Pokemon data for type filter...</p>
+      </div>
+    } @else {
+      <div class="pokemon-list">
+        @for(pokemon of filteredPokemons(); track pokemon.id){
+          <div class="pokemon-list-item" 
+               (mouseenter)="onPokemonHover(pokemon.detailedData || null)"
+               (mouseleave)="onPokemonLeave()"
+               #pokemonItem>
+            
+            @if(pokemon.detailedData){
+              <app-pokemon-card 
+                [pokemon]="pokemon.detailedData"
+                [isShiny]="getPokemonShinyStatus(pokemon.id)">
+              </app-pokemon-card>
+            } @else if(pokemon.isLoading){
+              <div class="pokemon-loading-card">
+                <div class="loading-placeholder">
+                  <div class="placeholder-image"></div>
+                  <div class="placeholder-text">
+                    <div class="placeholder-name"></div>
+                    <div class="placeholder-id"></div>
+                  </div>
+                </div>
+              </div>
+            } @else {
+              <div class="pokemon-basic-card" 
+                   (click)="loadPokemonData(pokemon.id)"
+                   appIntersectionObserver
+                   (visible)="onItemVisible(pokemon.id, $event)"
+                   #intersectionTarget>
+                <div class="basic-pokemon-info">
+                  <div class="pokemon-id">#{{pokemon.id}}</div>
+                  <div class="pokemon-name">{{pokemon.name | titlecase}}</div>
+                  <div class="click-to-load">Click to load details</div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
   </div>
 
   <div class="detail-panel" [style.background]="getBackgroundGradient()">

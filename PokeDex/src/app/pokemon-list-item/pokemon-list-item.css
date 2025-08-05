@@ -97,6 +97,26 @@
   background: rgba(255, 255, 255, 1);
 }
 
+.type-dropdown-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.type-dropdown-button:disabled:hover {
+  border-color: #ffffff;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.type-filter-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(51, 51, 51, 0.3);
+  border-top: 2px solid #333;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
 .type-dropdown-button.selected {
   border-color: #ffd700;
   box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
@@ -235,5 +255,133 @@
 .pokemon-list-item:hover {
   transform: translateX(-4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #ffffff;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Pokemon Loading Card */
+.pokemon-loading-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.placeholder-image {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.placeholder-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.placeholder-name {
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.placeholder-id {
+  height: 16px;
+  width: 60%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Basic Pokemon Card */
+.pokemon-basic-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pokemon-basic-card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+}
+
+.basic-pokemon-info {
+  text-align: center;
+  color: #ffffff;
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+.pokemon-id {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.5rem;
+}
+
+.pokemon-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.click-to-load {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
 }
 
