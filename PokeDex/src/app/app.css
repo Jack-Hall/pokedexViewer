@@ -3,7 +3,10 @@
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
+  position: relative;
 }
+
+/* Navigation styles moved to NavigationComponent */
 
 h1 {
   color: #333;

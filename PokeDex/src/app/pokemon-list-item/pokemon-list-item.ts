@@ -1,9 +1,11 @@
-import { Component, OnInit, ChangeDetectionStrategy, signal, computed, inject, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal, computed, inject, HostListener, OnDestroy, effect } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
-import { PokemonDataService } from '../data.service';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { UnifiedDataService, ApiType } from '../unified-data.service';
 import { PokemonCard } from '../pokemon-card/pokemon-card';
 import { PokemonDetailPanel } from '../pokemon-detail-panel/pokemon-detail-panel';
 import { TypeCard } from '../type-card/type-card';
+import { ApiSwitcherComponent } from '../api-switcher/api-switcher';
 import { Pokemon, PokemonSpecies } from '../pokemon.types';
 import { forkJoin, Subject, takeUntil, BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
@@ -23,7 +25,7 @@ interface VirtualizedPokemon extends BasicPokemon {
 
 @Component({
   selector: 'app-pokemon-list-item',
-  imports: [PokemonCard, PokemonDetailPanel, TypeCard, TitleCasePipe, IntersectionObserverDirective],
+  imports: [PokemonCard, PokemonDetailPanel, TypeCard, TitleCasePipe, IntersectionObserverDirective, RouterLink, RouterLinkActive, ApiSwitcherComponent],
   templateUrl: './pokemon-list-item.html',
   styleUrl: './pokemon-list-item.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -63,7 +65,7 @@ export class PokemonList implements OnInit, OnDestroy {
     'fairy': 'linear-gradient(135deg, #EE99AC 0%, #F8A9BC 25%, #F8B9CC 50%, #F8C9DC 75%, #F8D9EC 100%)'
   };
 
-  private readonly dataService = inject(PokemonDataService);
+  private readonly dataService = inject(UnifiedDataService);
 
   // Computed signals for template access
   readonly virtualizedPokemons = this._virtualizedPokemons.asReadonly();
@@ -108,8 +110,27 @@ export class PokemonList implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    // Set the API to use GraphQL
+    this.dataService.setApiType('graphql');
     this.loadBasicPokemonData();
     this.setupIntersectionObserver();
+    
+    // Listen for API type changes and reload data
+    this.setupApiChangeListener();
+  }
+
+  private setupApiChangeListener(): void {
+    // Create a subscription to watch for API changes
+    this.dataService.apiTypeChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((apiType: ApiType) => {
+        console.log('API type changed to:', apiType);
+        // Only reload if this is not the initial load
+        if (this._basicPokemons().length > 0) {
+          console.log('Reloading data for API:', apiType);
+          this.loadBasicPokemonData();
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -120,33 +141,59 @@ export class PokemonList implements OnInit, OnDestroy {
   private loadBasicPokemonData(): void {
     this._isLoading.set(true);
     
-          this.dataService.getPokemon()
+    // Clear existing data when switching APIs
+    this._basicPokemons.set([]);
+    this._virtualizedPokemons.set([]);
+    this._selectedPokemon.set(null);
+    
+    const currentApiType = this.dataService.currentApiType();
+    console.log('PokemonList: Loading Pokemon data using:', currentApiType, 'API');
+    console.log('PokemonList: Current basic pokemons count:', this._basicPokemons().length);
+    
+    this.dataService.getPokemon()
       .pipe(
         takeUntil(this.destroy$),
         map((response: any) => {
-          // Extract ID from URL and create basic Pokemon objects
-          return response.results.map((pokemon: any, index: number) => {
-            const id = index + 1; // Pokemon IDs start from 1
-            return {
-              id,
+          console.log('PokemonList: Received response from shared service:', response);
+          // Check if we have comprehensive data from GraphQL
+          if (response.fullData) {
+            // Use the comprehensive data directly
+            const pokemons = response.fullData.map((pokemon: any) => ({
+              id: pokemon.id,
               name: pokemon.name,
-              url: pokemon.url
-            };
-          });
+              url: `https://pokeapi.co/api/v2/pokemon/${pokemon.id}/`,
+              detailedData: pokemon
+            }));
+            console.log('PokemonList: Using GraphQL data, mapped', pokemons.length, 'Pokemon');
+            return pokemons;
+          } else {
+            // Fallback to basic data for REST API
+            const pokemons = response.results.map((pokemon: any, index: number) => {
+              const id = index + 1; // Pokemon IDs start from 1
+              return {
+                id,
+                name: pokemon.name,
+                url: pokemon.url
+              };
+            });
+            console.log('PokemonList: Using REST data, mapped', pokemons.length, 'Pokemon');
+            return pokemons;
+          }
         }),
-        tap((basicPokemons: BasicPokemon[]) => {
-          this._basicPokemons.set(basicPokemons);
+        tap((pokemons: any[]) => {
+          this._basicPokemons.set(pokemons);
           
           // Initialize virtualized pokemon array
-          const virtualizedPokemons: VirtualizedPokemon[] = basicPokemons.map(pokemon => ({
+          const virtualizedPokemons: VirtualizedPokemon[] = pokemons.map(pokemon => ({
             ...pokemon,
-            detailedData: undefined,
+            detailedData: pokemon.detailedData || undefined,
             isLoading: false,
             isVisible: false
           }));
           
           this._virtualizedPokemons.set(virtualizedPokemons);
           this._isLoading.set(false);
+          console.log('PokemonList: Data loading completed. Pokemon count:', virtualizedPokemons.length);
         })
       )
       .subscribe();
@@ -193,9 +240,9 @@ export class PokemonList implements OnInit, OnDestroy {
         if (!pokemon) return [];
         
         return this.dataService.getAllData(pokemon.name).pipe(
-          switchMap(pokemonData => 
+          switchMap((pokemonData: Pokemon) => 
             this.dataService.getSpeciesData(pokemonData.species.url).pipe(
-              map(speciesData => ({
+              map((speciesData: PokemonSpecies) => ({
                 ...pokemonData,
                 species_details: speciesData
               }))

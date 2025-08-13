@@ -10,8 +10,6 @@ import { ChatWindow } from './chat-window/chat-window';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App   {
-  
-
-
+export class App {
+  // Navigation logic can be added here if needed
 }

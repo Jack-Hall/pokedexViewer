@@ -1,0 +1,137 @@
+@if (isVisible) {
+  <div class="popup-overlay" (click)="close()">
+    <div class="popup-container" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="popup-header">
+        <h3>Select Moves for {{ pokemon?.name | titlecase }}</h3>
+        <button class="close-btn" (click)="close()">×</button>
+      </div>
+
+      <!-- Main Content -->
+      <div class="popup-content">
+        <!-- Left Side: Pokemon Info and Controls -->
+        <div class="left-side">
+          <!-- Pokemon Info -->
+          @if (pokemon) {
+            <div class="pokemon-info">
+              <div class="pokemon-details">
+                <img 
+                  [src]="pokemon.sprites?.front_default || 'assets/pokemon-placeholder.png'" 
+                  [alt]="pokemon.name"
+                  class="pokemon-sprite"
+                >
+                <div class="pokemon-meta">
+                  <h4>{{ pokemon.name | titlecase }}</h4>
+                  <div class="pokemon-types">
+                    @for (type of pokemonTypes(); track type) {
+                      <app-type-card [type]="type"></app-type-card>
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="selection-info">
+                <span class="selected-count">{{ tempSelectedMoves().length }}/4 moves selected</span>
+              </div>
+            </div>
+          }
+
+          <!-- Controls -->
+          <div class="controls">
+            <div class="search-section">
+              <input 
+                type="text" 
+                placeholder="Search moves..." 
+                [value]="searchTerm()"
+                (input)="onSearchChange($event)"
+                class="search-input"
+              >
+            </div>
+            
+            <div class="filter-section">
+              <select [value]="selectedType()" (change)="onTypeFilterChange($event)" class="type-filter">
+                <option value="all">All Types</option>
+                @for (type of uniqueTypes(); track type) {
+                  <option [value]="type">{{ type | titlecase }}</option>
+                }
+              </select>
+              
+              <select [value]="sortBy()" (change)="onSortChange($event)" class="sort-select">
+                <option value="name">Sort by Name</option>
+                <option value="power">Sort by Power</option>
+                <option value="accuracy">Sort by Accuracy</option>
+                <option value="pp">Sort by PP</option>
+              </select>
+              
+              <button (click)="toggleSortDirection()" class="sort-direction-btn">
+                @if (sortDirection() === 'asc') {
+                  ↑ Ascending
+                } @else {
+                  ↓ Descending
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Selected Moves Preview -->
+          @if (tempSelectedMoves().length > 0) {
+            <div class="selected-moves-preview">
+              <h4>Selected Moves:</h4>
+              <div class="selected-moves">
+                @for (moveName of tempSelectedMoves(); track moveName) {
+                  <div class="selected-move">
+                    <span>{{ moveName | titlecase }}</span>
+                    <button (click)="toggleMoveSelection(moveName)" class="remove-move">×</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Right Side: Moves List -->
+        <div class="right-side">
+          <!-- Loading State -->
+          @if (isLoading()) {
+            <div class="loading-section">
+              <div class="loading-spinner"></div>
+              <p>Loading move details...</p>
+            </div>
+          }
+
+          <!-- Moves List -->
+          @if (!isLoading()) {
+            <div class="moves-list">
+              @if (filteredAndSortedMoves().length === 0) {
+                <div class="no-moves">
+                  <p>No moves found matching your criteria.</p>
+                </div>
+              } @else {
+                @for (move of filteredAndSortedMoves(); track move.name) {
+                  <app-move-card 
+                    [move]="move"
+                    [isSelected]="isMoveSelected(move.name)"
+                    [canSelectMore]="canSelectMore()"
+                    (click)="toggleMoveSelection(move.name)"
+                  ></app-move-card>
+                }
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button (click)="clearSelection()" class="clear-btn" [disabled]="tempSelectedMoves().length === 0">
+          Clear Selection
+        </button>
+        <button (click)="close()" class="cancel-btn">
+          Cancel
+        </button>
+        <button (click)="confirmSelection()" class="confirm-btn">
+          Confirm Selection ({{ tempSelectedMoves().length }})
+        </button>
+      </div>
+    </div>
+  </div>
+}

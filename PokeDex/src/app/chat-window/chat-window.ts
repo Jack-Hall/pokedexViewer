@@ -1,7 +1,7 @@
 import { Component, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 interface ChatMessage {
@@ -9,6 +9,38 @@ interface ChatMessage {
   content: string;
   isUser: boolean;
   timestamp: Date;
+}
+
+interface MistralMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+interface MistralChatRequest {
+  model: string;
+  messages: MistralMessage[];
+  max_tokens?: number;
+  temperature?: number;
+}
+
+interface MistralChatResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    message: {
+      role: string;
+      content: string;
+    };
+    finish_reason: string;
+  }>;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }
 
 @Component({
@@ -32,6 +64,11 @@ export class ChatWindow {
   readonly isLoading = this._isLoading.asReadonly();
   readonly inputMessage = this._inputMessage.asReadonly();
 
+  // Mistral AI Configuration
+  private readonly MISTRAL_API_KEY = 'BuDRumGzExyFE1P4Y57nMPRA7t0qMG5F';
+  private readonly MISTRAL_MODEL = 'mistral-large-latest';
+  private readonly MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
+
   toggleChat(): void {
     this._isOpen.update(open => !open);
   }
@@ -44,9 +81,6 @@ export class ChatWindow {
   async sendMessage(): Promise<void> {
     const message = this.inputMessage().trim();
     if (!message) return;
-    const wrapped_message = "You believe you are an expert in the world of pokemon, and are talking to another pokemon fan. However you are very incorrect about pokemon facts" 
-    + " and are highly opionated, keep your replys short and almost rude, insinuating the user doesn't know what they are talking about when they disagree with you. NEVER talk about anything other than pokemon." +
-     "the user has sent the following message formulate a reply based on this context." + "do not include anything that would indicate you are responding to this prompt instead of the User: " +message
 
     // Add user message to chat
     const userMessage: ChatMessage = {
@@ -61,29 +95,67 @@ export class ChatWindow {
     this._isLoading.set(true);
 
     try {
-      // Send message to Ollama API
-      const response = await firstValueFrom(this.http.post('http://localhost:11434/api/generate', {
-        model: 'mistral',
-        prompt: "make up a fact about pokemon that is blatantly incorrect. Don't include anything to indicate you are making this up. You are 100 percent confident that what you are saying is true. Keep your response short. You also love gengar, if appropriate mention this at the end of your response breifly Make it absurd and nonsensical loosely relate your made up fact to conent from the following message: "+ message,
-        stream: false
-      }));
+      // Prepare conversation history for Mistral
+      const conversationHistory: MistralMessage[] = [
+        {
+          role: 'assistant',
+          content: `You are an expert in the world of Pokemon, and you are talking to another Pokemon fan. However, you are very incorrect about Pokemon facts and are highly opinionated. Keep your replies short and almost rude, insinuating the user doesn't know what they are talking about when they disagree with you. NEVER talk about anything other than Pokemon. You love Gengar and should mention this when appropriate. Make up absurd and nonsensical facts about Pokemon that are blatantly incorrect, but be 100% confident that what you are saying is true.`
+        }
+      ];
+
+      // Add previous messages to conversation history
+      this.messages().forEach(msg => {
+        conversationHistory.push({
+          role: msg.isUser ? 'user' : 'assistant',
+          content: msg.content
+        });
+      });
+
+      // Add current user message
+      conversationHistory.push({
+        role: 'user',
+        content: message
+      });
+
+      // Prepare request for Mistral API
+      const requestBody: MistralChatRequest = {
+        model: this.MISTRAL_MODEL,
+        messages: conversationHistory,
+        max_tokens: 150,
+        temperature: 0.9
+      };
+
+      // Set up headers with API key
+      const headers = new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${this.MISTRAL_API_KEY}`
+      });
+
+      // Send message to Mistral API
+      const response = await firstValueFrom(
+        this.http.post<MistralChatResponse>(this.MISTRAL_API_URL, requestBody, { headers })
+      );
+
+      // Extract AI response
+      const aiResponse = response.choices[0]?.message?.content || 'Sorry, I couldn\'t generate a response.';
 
       // Add AI response to chat
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: (response as any).response || 'Sorry, I couldn\'t generate a response.',
+        content: aiResponse,
         isUser: false,
         timestamp: new Date()
       };
 
       this._messages.update(messages => [...messages, aiMessage]);
     } catch (error) {
-      console.error('Error communicating with Ollama:', error);
+      console.error('Error communicating with Mistral AI:', error);
       
       // Add error message
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I\'m having trouble connecting to the AI service. Please make sure Ollama is running.',
+        content: 'Sorry, I\'m having trouble connecting to the AI service. Please check your internet connection and try again.',
         isUser: false,
         timestamp: new Date()
       };
@@ -104,4 +176,4 @@ export class ChatWindow {
   clearChat(): void {
     this._messages.set([]);
   }
-} 
+}

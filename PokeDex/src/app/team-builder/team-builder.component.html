@@ -1,0 +1,203 @@
+<div class="team-builder-container">
+  <!-- Navigation Header -->
+  <div class="navigation-header">
+    <div class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+        <span class="nav-icon">⚔️</span>
+        Team Builder
+      </a>
+      <a routerLink="/pokemon-list" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📋</span>
+        Pokemon List
+      </a>
+    </div>
+    <app-api-switcher></app-api-switcher>
+  </div>
+
+  <!-- Header -->
+  <div class="team-builder-header">
+    <h1>Pokemon Team Builder</h1>
+    <div class="team-info">
+      <input 
+        type="text" 
+        [value]="currentTeam().name"
+        (input)="updateTeamName($event)"
+        class="team-name-input"
+        placeholder="Enter team name..."
+      >
+      <div class="team-stats">
+        <span class="stat">Pokemon: {{ teamStats().totalPokemon }}/6</span>
+        <span class="stat">Moves: {{ teamStats().totalMoves }}</span>
+        <span class="stat">Complete: {{ teamStats().completionPercentage }}%</span>
+      </div>
+    </div>
+    <button (click)="clearTeam()" class="clear-team-btn">Clear Team</button>
+  </div>
+
+  <div class="team-builder-content">
+    <!-- Pokemon List Sidebar -->
+    <div class="pokemon-list-sidebar">
+      <div class="sidebar-header">
+        <h3>Available Pokemon</h3>
+        <input 
+          type="text" 
+          [value]="searchTerm()"
+          (input)="onSearchChange($event)"
+          placeholder="Search Pokemon..."
+          class="search-input"
+        >
+      </div>
+      
+      <div class="pokemon-list">
+        <!-- Loading State -->
+        @if (isLoading()) {
+          <div class="loading-message">
+            <div class="loading-spinner"></div>
+            <p>Loading Pokemon data...</p>
+          </div>
+        }
+        
+        <!-- Error State -->
+        @if (hasError()) {
+          <div class="error-message">
+            <p>Error loading Pokemon data. Please try again.</p>
+            <button (click)="retryLoad()" class="retry-btn">Retry</button>
+          </div>
+        }
+        
+        <!-- Pokemon List -->
+        @if (!isLoading() && !hasError()) {
+          @if (filteredPokemons().length === 0) {
+            <div class="no-results">
+              <p>No Pokemon found matching your search.</p>
+            </div>
+          } @else {
+            <div class="pokemon-count">
+              Showing {{ filteredPokemons().length }} of {{ pokemonList().length }} Pokemon
+            </div>
+            @for (pokemon of filteredPokemons(); track pokemon.id) {
+              <div 
+                class="pokemon-item"
+                [class.selected]="isPokemonInTeam(pokemon.id)"
+                [class.disabled]="isTeamFull() && !isPokemonInTeam(pokemon.id)"
+                (click)="togglePokemonInTeam(pokemon)"
+              >
+                <div class="pokemon-info">
+                  <span class="pokemon-id">#{{ pokemon.id }}</span>
+                  <span class="pokemon-name">{{ pokemon.name | titlecase }}</span>
+                </div>
+                @if (pokemon.detailedData?.types) {
+                  <div class="pokemon-types">
+                    @for (type of pokemon.detailedData!.types; track type.slot) {
+                      <app-type-card [type]="type.type.name"></app-type-card>
+                    }
+                  </div>
+                }
+                <div class="pokemon-actions">
+                  @if (!isPokemonInTeam(pokemon.id)) {
+                    <button 
+                      (click)="addPokemonToTeam(pokemon); $event.stopPropagation()"
+                      [disabled]="isTeamFull()"
+                      class="add-btn"
+                    >
+                      Add
+                    </button>
+                  }
+                  @if (isPokemonInTeam(pokemon.id)) {
+                    <button 
+                      (click)="removePokemonFromTeam(pokemon.id); $event.stopPropagation()"
+                      class="remove-btn"
+                    >
+                      Remove
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Team Composition -->
+    <div class="team-composition">
+      <h3>Your Team</h3>
+      <div class="team-grid">
+        @for (teamPokemon of teamPokemon(); track teamPokemon.id) {
+          <div class="team-pokemon-card">
+            <div class="pokemon-header">
+              <img 
+                [src]="getPokemonSprite(teamPokemon.pokemon)"
+                [alt]="teamPokemon.name"
+                class="pokemon-sprite"
+              >
+              <div class="pokemon-details">
+                <h4>{{ teamPokemon.name | titlecase }}</h4>
+                @if (teamPokemon.pokemon.types) {
+                  <div class="pokemon-types">
+                    @for (type of teamPokemon.pokemon.types; track type.slot) {
+                      <app-type-card [type]="type.type.name"></app-type-card>
+                    }
+                  </div>
+                }
+              </div>
+              <button 
+                (click)="removePokemonFromTeam(teamPokemon.id)"
+                class="remove-pokemon-btn"
+              >
+                ×
+              </button>
+            </div>
+            
+            @if (teamPokemon.selectedMoves) {
+              <div class="moves-section">
+                <h5>Moves ({{ teamPokemon.selectedMoves.length }}/{{ teamPokemon.maxMoves }})</h5>
+                <div class="selected-moves">
+                  @for (move of teamPokemon.selectedMoves; track move) {
+                    <div class="selected-move">
+                      <span>{{ move | titlecase }}</span>
+                      <button 
+                        (click)="removeMove(teamPokemon.id, move)"
+                        class="remove-move-btn"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  }
+                </div>
+                
+                <div class="moves-actions">
+                  <button 
+                    (click)="openMoveSelector(teamPokemon.id)"
+                    class="select-moves-btn"
+                  >
+                    Select Moves
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        
+        <!-- Empty slots -->
+        @for (i of getEmptySlots(); track i) {
+          <div class="empty-slot">
+            <div class="empty-slot-content">
+              <span>Empty Slot</span>
+              <span class="slot-number">{{ teamPokemon().length + i + 1 }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Move Selector Popup -->
+  <app-move-selector-popup
+    [pokemon]="selectedPokemonForMoves()"
+    [selectedMoves]="getCurrentSelectedMoves()"
+    [isVisible]="movePopupVisible()"
+    (movesSelected)="onMovesSelected($event)"
+    (closePopup)="closeMoveSelector()"
+  ></app-move-selector-popup>
+</div>
